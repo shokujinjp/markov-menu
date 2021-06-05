@@ -1,8 +1,14 @@
 package markov
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
+	"time"
+
+	"github.com/ikawaha/kagome-dict/ipa"
+	"github.com/ikawaha/kagome/v2/tokenizer"
+	"github.com/shokujinjp/shokujinjp-sdk-go/shokujinjp"
 )
 
 // flag messages
@@ -10,6 +16,25 @@ const (
 	MessageBegin = "__BEGIN__"
 	MessageEnd   = "__END__"
 )
+
+// Parse parse menus
+func Parse(menus []shokujinjp.Menu) ([][]string, error) {
+	rand.Seed(time.Now().Unix())
+
+	t, err := tokenizer.New(ipa.Dict(), tokenizer.OmitBosEos())
+	if err != nil {
+		return nil, fmt.Errorf("failed to tokenizer.New: %w", err)
+	}
+
+	var parsed [][]string
+	for _, menu := range menus {
+		seg := t.Wakati(menu.Name)
+		block := ParseMenu(seg)
+		parsed = append(parsed, block...)
+	}
+
+	return parsed, nil
+}
 
 // ParseMenu parse strings
 func ParseMenu(wakatied []string) [][]string {
